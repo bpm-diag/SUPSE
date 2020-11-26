@@ -1,0 +1,6 @@
+C:/Users/Giacomo/Documents/Universita/_Thesis/planning/Plan-based_Imperative_Conf_Checker/fast-downward/builds/release32/CMakeFiles/rebuild_cache.dir
+C:/Users/Giacomo/Documents/Universita/_Thesis/planning/Plan-based_Imperative_Conf_Checker/fast-downward/builds/release32/CMakeFiles/translate.dir
+C:/Users/Giacomo/Documents/Universita/_Thesis/planning/Plan-based_Imperative_Conf_Checker/fast-downward/builds/release32/CMakeFiles/edit_cache.dir
+C:/Users/Giacomo/Documents/Universita/_Thesis/planning/Plan-based_Imperative_Conf_Checker/fast-downward/builds/release32/search/CMakeFiles/downward.dir
+C:/Users/Giacomo/Documents/Universita/_Thesis/planning/Plan-based_Imperative_Conf_Checker/fast-downward/builds/release32/search/CMakeFiles/edit_cache.dir
+C:/Users/Giacomo/Documents/Universita/_Thesis/planning/Plan-based_Imperative_Conf_Checker/fast-downward/builds/release32/search/CMakeFiles/rebuild_cache.dir
