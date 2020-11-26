@@ -34,14 +34,14 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/commons-lang3-3.6.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/guava-16.0.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/OpenXES.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/OpenXES-XStream.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/PetriNets.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/ProM-Framework.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/ProM-Models.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/Spex.jar"/>
-	<classpathentry kind="lib" path="C:/Users/simon/eclipse-workspace/PlanningConformanceChecker/lib/xpp3-1.1.4c.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang3-3.6.jar"/>
+	<classpathentry kind="lib" path="lib/guava-16.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/OpenXES-XStream.jar"/>
+	<classpathentry kind="lib" path="lib/OpenXES.jar"/>
+	<classpathentry kind="lib" path="lib/PetriNets.jar"/>
+	<classpathentry kind="lib" path="lib/ProM-Framework.jar"/>
+	<classpathentry kind="lib" path="lib/ProM-Models.jar"/>
+	<classpathentry kind="lib" path="lib/Spex.jar"/>
+	<classpathentry kind="lib" path="lib/xpp3-1.1.4c.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
