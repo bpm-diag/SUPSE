@@ -87,328 +87,324 @@ public class Main {
 		String input_log= prop.getProperty("input_log");
 		String tasks= prop.getProperty("tasks");
 		String[] patterns = tasks.split(";");
-		
 		int tId = 0;
-		
+		int iteration = 1;
 		for(String pattern : patterns) {
+			List<String> max = new ArrayList<String>();
+			maxSynchMovesPerPattern.put(pattern, max);
+			List<Trace> traceList = new ArrayList<Trace>();
+			tracesPerPattern.put(pattern, traceList);
+			List<String> moveSynchs = new ArrayList<String>();
+			List<String> moveSynchsCopy = new ArrayList<String>();
+			XLog log = XLogReader.openLog(input_log);
+			do {
+				/**Import della rete di petri in input*/
+				PnmlImportUtils ut = new PnmlImportUtils();
+				InputStream input = new FileInputStream(new File(pattern));
+				Pnml pnml = ut.importPnmlFromStream(input);
 		
-		List<String> max = new ArrayList<String>();
-		maxSynchMovesPerPattern.put(pattern, max);
-		List<Trace> traceList = new ArrayList<Trace>();
-		tracesPerPattern.put(pattern, traceList);
-		List<String> moveSynchs = new ArrayList<String>();
-		List<String> moveSynchsCopy = new ArrayList<String>();
-		XLog log = XLogReader.openLog(input_log);
+				Petrinet net = PetrinetFactory.newPetrinet(pnml.getLabel());
+				Marking marking = new Marking();								  // only needed for Petrinet initialization
+				pnml.convertToNet(net, marking, new GraphLayoutConnection(net));  // initialize Petrinet
 		
-		do {
+				Collection<Place> places = net.getPlaces();
+				Collection<Transition> transitions = net.getTransitions();
+				
+				//System.out.println("Number of places: "+places.size());
+				//System.out.println("Number of transitions: "+transitions.size());
+				
+				System.out.println("######################################");
+				
+				System.out.println("Iteration #"+iteration);
+				getTraces(log);
+				
+				System.out.println("######################################");
+				
+				
+				Constants.setAllTransitionsVector(new Vector<PetrinetTransition>());
+				Constants.setAllPlacesVector(new Vector<String>());
+				Constants.setPlacesInInitialMarkingVector(new Vector<String>());
+				Constants.setPlacesInFinalMarkingVector(new Vector<String>());
+				
+				//Feed the vector of places with the places imported from the Petri Net.
+				//Determine which places compose the initial and final markings.
+				for (Place place : places) {
+					String placeName = place.getLabel();
+					placeName = Utilities.getCorrectFormatting(placeName);
+		
+					Constants.getAllPlacesVector().addElement(placeName.toLowerCase());
+		
+					Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> placeOutEdgesCollection = net.getOutEdges(place);								
+					Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> placeInEdgesCollection = net.getInEdges(place);
+		
+					if(placeInEdgesCollection.isEmpty())
+						Constants.getPlacesInInitialMarkingVector().addElement(placeName);
+		
+					if(placeOutEdgesCollection.isEmpty())
+						Constants.getPlacesInFinalMarkingVector().addElement(placeName);
+				}
+				
+				int generatedTransitionsNum = 0;
+				for (Transition transition : transitions) {
+					//System.out.println(aTransition.getLabel());
+		
+					//To get OUTGOING edges from a transition
+					Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionOutEdgesCollection = net.getOutEdges(transition);
+		
+					//To get INGOING edges to a transition
+					Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionInEdgesCollection = net.getInEdges(transition);
 		
 		
-		
-		PnmlImportUtils ut = new PnmlImportUtils();
-		InputStream input = new FileInputStream(new File(pattern));
-		Pnml pnml = ut.importPnmlFromStream(input);
-
-		// create Petri Net from Pnml object
-		Petrinet net = PetrinetFactory.newPetrinet(pnml.getLabel());
-		Marking marking = new Marking();								  // only needed for Petrinet initialization
-		pnml.convertToNet(net, marking, new GraphLayoutConnection(net));  // initialize Petrinet
-
-		Collection<Place> places = net.getPlaces();
-		Collection<Transition> transitions = net.getTransitions();
-		
-		System.out.println("Number of places: "+places.size());
-		System.out.println("Number of transitions: "+transitions.size());
-		
-		System.out.println("######################################");
-		
-		getTraces(log);
-		
-		System.out.println("######################################");
+					Vector<Place> transitionOutPlacesVector = new Vector<Place>();
+					Vector<Place> transitionInPlacesVector = new Vector<Place>();
+					Iterator<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionInEdgesIterator = transitionInEdgesCollection.iterator();
+					Iterator<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionOutEdgesIterator = transitionOutEdgesCollection.iterator();
 		
 		
-		Constants.setAllTransitionsVector(new Vector<PetrinetTransition>());
-		Constants.setAllPlacesVector(new Vector<String>());
-		Constants.setPlacesInInitialMarkingVector(new Vector<String>());
-		Constants.setPlacesInFinalMarkingVector(new Vector<String>());
-		
-		//Feed the vector of places with the places imported from the Petri Net.
-		//Determine which places compose the initial and final markings.
-		for (Place place : places) {
-			String placeName = place.getLabel();
-			placeName = Utilities.getCorrectFormatting(placeName);
-
-			Constants.getAllPlacesVector().addElement(placeName.toLowerCase());
-
-			Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> placeOutEdgesCollection = net.getOutEdges(place);								
-			Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> placeInEdgesCollection = net.getInEdges(place);
-
-			if(placeInEdgesCollection.isEmpty())
-				Constants.getPlacesInInitialMarkingVector().addElement(placeName);
-
-			if(placeOutEdgesCollection.isEmpty())
-				Constants.getPlacesInFinalMarkingVector().addElement(placeName);
-		}
-		
-		int generatedTransitionsNum = 0;
-		for (Transition transition : transitions) {
-			//System.out.println(aTransition.getLabel());
-
-			//To get OUTGOING edges from a transition
-			Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionOutEdgesCollection = net.getOutEdges(transition);
-
-			//To get INGOING edges to a transition
-			Collection<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionInEdgesCollection = net.getInEdges(transition);
-
-
-			Vector<Place> transitionOutPlacesVector = new Vector<Place>();
-			Vector<Place> transitionInPlacesVector = new Vector<Place>();
-			Iterator<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionInEdgesIterator = transitionInEdgesCollection.iterator();
-			Iterator<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> transitionOutEdgesIterator = transitionOutEdgesCollection.iterator();
-
-
-			while(transitionInEdgesIterator.hasNext()) {
-				PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge = transitionInEdgesIterator.next();									
-				transitionInPlacesVector.addElement((Place) edge.getSource());
-			}
-			
-			
-			while(transitionOutEdgesIterator.hasNext()) {
-				PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge = transitionOutEdgesIterator.next();
-				transitionOutPlacesVector.addElement((Place) edge.getTarget());
-
-				//System.out.println(edge.getTarget().getLabel());										
-			}
-
-			String activityName = transition.getLabel();
-
-			if(activityName.isEmpty() || activityName.equalsIgnoreCase("") || activityName.equalsIgnoreCase(" ") || activityName.equalsIgnoreCase("\"")) {
-				activityName = new String(INVISIBLE_TRANSITION_PREFIX + generatedTransitionsNum);
-				generatedTransitionsNum++;
-			}
-
-			activityName = Utilities.getCorrectFormatting(activityName);
-
-			PetrinetTransition petriNetTransition = new PetrinetTransition(activityName.toLowerCase(), transitionInPlacesVector, transitionOutPlacesVector);
-			Constants.getAllTransitionsVector().addElement(petriNetTransition);
-		}
-		
-		//
-		// Check if a transition with a specific label appears multiple times in a Petri Net		
-		// If so, create a specific alias for the transition 
-		//
-		for(int ixc=0;ixc<Constants.getAllTransitionsVector().size();ixc++)  {
-
-			PetrinetTransition pnt = Constants.getAllTransitionsVector().elementAt(ixc);
-			int occurrences = 0;
-
-			if(!pnt.isMultiple()) {
-
-				for(int j=ixc+1;j<Constants.getAllTransitionsVector().size();j++)  {
-
-					PetrinetTransition pnt2 = Constants.getAllTransitionsVector().elementAt(j);
-
-					if(pnt2.getName().equalsIgnoreCase(pnt.getName())) {
-						if(!pnt.isMultiple()) {
-							pnt.setMultiple(true);
-							pnt.setAlias(pnt.getName() + "0");
-						}
-						occurrences ++;
-						pnt2.setAlias(pnt.getName() + occurrences);
-						pnt2.setMultiple(true);
+					while(transitionInEdgesIterator.hasNext()) {
+						PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge = transitionInEdgesIterator.next();									
+						transitionInPlacesVector.addElement((Place) edge.getSource());
 					}
-
+					
+					
+					while(transitionOutEdgesIterator.hasNext()) {
+						PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge = transitionOutEdgesIterator.next();
+						transitionOutPlacesVector.addElement((Place) edge.getTarget());
+		
+						//System.out.println(edge.getTarget().getLabel());										
+					}
+		
+					String activityName = transition.getLabel();
+		
+					if(activityName.isEmpty() || activityName.equalsIgnoreCase("") || activityName.equalsIgnoreCase(" ") || activityName.equalsIgnoreCase("\"")) {
+						activityName = new String(INVISIBLE_TRANSITION_PREFIX + generatedTransitionsNum);
+						generatedTransitionsNum++;
+					}
+		
+					activityName = Utilities.getCorrectFormatting(activityName);
+		
+					PetrinetTransition petriNetTransition = new PetrinetTransition(activityName.toLowerCase(), transitionInPlacesVector, transitionOutPlacesVector);
+					Constants.getAllTransitionsVector().addElement(petriNetTransition);
 				}
-			}
-		}
+				
+				//
+				// Check if a transition with a specific label appears multiple times in a Petri Net		
+				// If so, create a specific alias for the transition 
+				//
+				for(int ixc=0;ixc<Constants.getAllTransitionsVector().size();ixc++)  {
 		
-		////////////////////////////////////////////////////////////////
-		// RESET the alphabet perspective view
+					PetrinetTransition pnt = Constants.getAllTransitionsVector().elementAt(ixc);
+					int occurrences = 0;
 		
-		Constants.setLogActivitiesRepositoryVector(new Vector<String>());
+					if(!pnt.isMultiple()) {
 		
-		// RESET the trace perspective view
-
-		//Constants.setAllTracesVector(new Vector<Trace>());
+						for(int j=ixc+1;j<Constants.getAllTransitionsVector().size();j++)  {
 		
-		// RESET the Petri Nets perspective view
-
-		//Constants.setAllPlacesVector(new Vector<String>());
-		//Constants.setAllTransitionsVector(new Vector<PetrinetTransition>());
+							PetrinetTransition pnt2 = Constants.getAllTransitionsVector().elementAt(j);
 		
-		////////////////////////////////////////////////////////////////
+							if(pnt2.getName().equalsIgnoreCase(pnt.getName())) {
+								if(!pnt.isMultiple()) {
+									pnt.setMultiple(true);
+									pnt.setAlias(pnt.getName() + "0");
+								}
+								occurrences ++;
+								pnt2.setAlias(pnt.getName() + occurrences);
+								pnt2.setMultiple(true);
+							}
 		
-		int traceId = 0;
-
-		// Vector used to record the complete alphabet of activities used in the log
-		Vector<String> logAlphabetVector = new Vector<String>();
-
-		// Vector used to record the activities of a specific trace of the log
-		Vector<String> traceActivitiesVector = new Vector<String>();
-
-		//int sumOfTracesLength=0;
-
-		for(XTrace trace:log){
-
-			traceId++;
-
-			//String traceName = XConceptExtension.instance().extractName(trace);
-			//System.out.println("Trace Name : " + traceName);
-
-			Trace t = new Trace("Trace#" + traceId);
-
-			t.setTraceAlphabet(new Vector<String>());
-
-			
-			traceActivitiesVector = new Vector<String>();
-
-			for(XEvent event : trace){
-				String activityName = XConceptExtension.instance().extractName(event).toLowerCase();
-				activityName = Utilities.getCorrectFormatting(activityName);
-
-				traceActivitiesVector.addElement(activityName);
-
-				if(!t.getTraceAlphabet().contains(activityName))
-					t.getTraceAlphabet().addElement(activityName);
-
-				// add activity name to log alphabet (if not already present)
-				if(!logAlphabetVector.contains(activityName))
-					logAlphabetVector.addElement(activityName);
-
-			}
-
-			// Update the single trace of the log						
-
-			for(int j=0;j<traceActivitiesVector.size();j++) {
-				String string = (String) traceActivitiesVector.elementAt(j);
-				t.getTraceContentVector().addElement(string);
-
-				t.getTraceTextualContent().append(string);
-				if(j<traceActivitiesVector.size()-1)
-					t.getTraceTextualContent().append(",");
-			}
-
-			Constants.getAllTracesVector().addElement(t);
-			/////////////////////////////////////////////////////////////
-
-		}
-
-		//Update the GUI component with the loaded LOG
-		Constants.setLogActivitiesRepositoryVector(logAlphabetVector);
-		
-		for(int i=0;i<Constants.getLogActivitiesRepositoryVector().size();i++) {
-
-			String string = (String) Constants.getLogActivitiesRepositoryVector().elementAt(i);
-
-			Constants.getAllActivitiesVector().addElement(string);
-
-			Vector<String> v = new Vector<String>();
-			v.addElement(string);
-			v.addElement("1");
-			v.addElement("1");
-			Constants.getActivitiesCostVector().addElement(v);
-
-		}
-		
-		for(int i=0;i<Constants.getAllTransitionsVector().size();i++) {
-			PetrinetTransition ith_trans = Constants.getAllTransitionsVector().elementAt(i);
-
-			if(!Constants.getLogActivitiesRepositoryVector().contains(ith_trans.getName())) {
-
-				Constants.getAllActivitiesVector().addElement(ith_trans.getName());
-
-				Vector<String> v = new Vector<String>();
-				v.addElement(ith_trans.getName());
-
-
-				if(ith_trans.getName().startsWith("generatedinv")) {
-					v.addElement("0");
-					v.addElement("0");
+						}
+					}
 				}
-				else {
+				
+				////////////////////////////////////////////////////////////////
+				// RESET the alphabet perspective view
+				
+				Constants.setLogActivitiesRepositoryVector(new Vector<String>());
+				
+				// RESET the trace perspective view
+		
+				//Constants.setAllTracesVector(new Vector<Trace>());
+				
+				// RESET the Petri Nets perspective view
+		
+				//Constants.setAllPlacesVector(new Vector<String>());
+				//Constants.setAllTransitionsVector(new Vector<PetrinetTransition>());
+				
+				////////////////////////////////////////////////////////////////
+				
+				int traceId = 0;
+		
+				// Vector used to record the complete alphabet of activities used in the log
+				Vector<String> logAlphabetVector = new Vector<String>();
+		
+				// Vector used to record the activities of a specific trace of the log
+				Vector<String> traceActivitiesVector = new Vector<String>();
+		
+				//int sumOfTracesLength=0;
+		
+				for(XTrace trace:log){
+		
+					traceId++;
+		
+					//String traceName = XConceptExtension.instance().extractName(trace);
+					//System.out.println("Trace Name : " + traceName);
+		
+					Trace t = new Trace("Trace#" + traceId);
+		
+					t.setTraceAlphabet(new Vector<String>());
+		
+					
+					traceActivitiesVector = new Vector<String>();
+		
+					for(XEvent event : trace){
+						String activityName = XConceptExtension.instance().extractName(event).toLowerCase();
+						activityName = Utilities.getCorrectFormatting(activityName);
+		
+						traceActivitiesVector.addElement(activityName);
+		
+						if(!t.getTraceAlphabet().contains(activityName))
+							t.getTraceAlphabet().addElement(activityName);
+		
+						// add activity name to log alphabet (if not already present)
+						if(!logAlphabetVector.contains(activityName))
+							logAlphabetVector.addElement(activityName);
+		
+					}
+		
+					// Update the single trace of the log						
+		
+					for(int j=0;j<traceActivitiesVector.size();j++) {
+						String string = (String) traceActivitiesVector.elementAt(j);
+						t.getTraceContentVector().addElement(string);
+		
+						t.getTraceTextualContent().append(string);
+						if(j<traceActivitiesVector.size()-1)
+							t.getTraceTextualContent().append(",");
+					}
+		
+					Constants.getAllTracesVector().addElement(t);
+					/////////////////////////////////////////////////////////////
+		
+				}
+		
+				//Update the GUI component with the loaded LOG
+				Constants.setLogActivitiesRepositoryVector(logAlphabetVector);
+				
+				for(int i=0;i<Constants.getLogActivitiesRepositoryVector().size();i++) {
+		
+					String string = (String) Constants.getLogActivitiesRepositoryVector().elementAt(i);
+		
+					Constants.getAllActivitiesVector().addElement(string);
+		
+					Vector<String> v = new Vector<String>();
+					v.addElement(string);
 					v.addElement("1");
 					v.addElement("1");
+					Constants.getActivitiesCostVector().addElement(v);
+		
 				}
-
-				Constants.getActivitiesCostVector().addElement(v);
-
-			}
-		}		    	
+				
+				for(int i=0;i<Constants.getAllTransitionsVector().size();i++) {
+					PetrinetTransition ith_trans = Constants.getAllTransitionsVector().elementAt(i);
 		
-		for(int kind=0;kind<Constants.getAllPlacesVector().size();kind++) {
-
-			String place_name = Constants.getAllPlacesVector().elementAt(kind);
-
-			Vector<String> v = new Vector<String>();
-			v.addElement(place_name);
-
-			if(Constants.getPlacesInInitialMarkingVector().contains(place_name)) {
-				v.addElement("1");
-			}
-			else v.addElement("0");
-
-			if(Constants.getPlacesInFinalMarkingVector().contains(place_name)) {
-				v.addElement("1");
-			}
-			else v.addElement("0");
-
-			Constants.getPetriNetMarkingVector().addElement(v);
-
-		}
+					if(!Constants.getLogActivitiesRepositoryVector().contains(ith_trans.getName())) {
 		
-		File plansFoundDir = new File(PLANS_FOUND_DIR);
-		File pddlFilesDir = new File(PDDL_FILES_DIR);
-		Utilities.deleteFolderContents(plansFoundDir);
-		Utilities.deleteFolderContents(pddlFilesDir);
+						Constants.getAllActivitiesVector().addElement(ith_trans.getName());
 		
-		for(Trace trace: Constants.getAllTracesVector()){
-			StringBuffer sb_domain = Utilities.createPropositionalDomain(trace);
-			StringBuffer sb_problem = Utilities.createPropositionalProblem(trace);
-	
-			Utilities.writeFile(PDDL_FILES_DIR+"domain1.pddl", sb_domain);
-			Utilities.writeFile(PDDL_FILES_DIR+"problem1.pddl", sb_problem);	 
-		}
+						Vector<String> v = new Vector<String>();
+						v.addElement(ith_trans.getName());
 		
 		
-		Planner p = new Planner();
-		p.runThePlanner("domain1.pddl","problem1.pddl");
+						if(ith_trans.getName().startsWith("generatedinv")) {
+							v.addElement("0");
+							v.addElement("0");
+						}
+						else {
+							v.addElement("1");
+							v.addElement("1");
+						}
 		
-		System.out.println("######################################");
-		moveSynchs  = extractMoveSynch();
-		moveSynchsCopy = new ArrayList<>();
+						Constants.getActivitiesCostVector().addElement(v);
 		
-		if(moveSynchs.size()!=0) {
-			tId++;
-			Trace t = new Trace("Trace#" + tId);
-			t.setTraceAlphabet(new Vector<String>());
+					}
+				}		    	
+				
+				for(int kind=0;kind<Constants.getAllPlacesVector().size();kind++) {
+		
+					String place_name = Constants.getAllPlacesVector().elementAt(kind);
+		
+					Vector<String> v = new Vector<String>();
+					v.addElement(place_name);
+		
+					if(Constants.getPlacesInInitialMarkingVector().contains(place_name)) {
+						v.addElement("1");
+					}
+					else v.addElement("0");
+		
+					if(Constants.getPlacesInFinalMarkingVector().contains(place_name)) {
+						v.addElement("1");
+					}
+					else v.addElement("0");
+		
+					Constants.getPetriNetMarkingVector().addElement(v);
+		
+				}
+				
+				/**
+				 * Computazione dell'allineamento
+				 */
+				File plansFoundDir = new File(PLANS_FOUND_DIR);
+				File pddlFilesDir = new File(PDDL_FILES_DIR);
+				Utilities.deleteFolderContents(plansFoundDir);
+				Utilities.deleteFolderContents(pddlFilesDir);
+				
+				for(Trace trace: Constants.getAllTracesVector()){
+					StringBuffer sb_domain = Utilities.createPropositionalDomain(trace);
+					StringBuffer sb_problem = Utilities.createPropositionalProblem(trace);
 			
-			for(String move : moveSynchs) {
-				moveSynchsCopy.add(move);
-				//if(!t.getTraceAlphabet().contains(move))
-				t.getTraceAlphabet().addElement(move);
-			}
-			
-			//aggiungi la traccia in una lista traces of movesynchs
-			tracesPerPattern.get(pattern).add(t);
-		}
+					Utilities.writeFile(PDDL_FILES_DIR+"domain1.pddl", sb_domain);
+					Utilities.writeFile(PDDL_FILES_DIR+"problem1.pddl", sb_problem);	 
+				}
+				
+				
+				Planner p = new Planner();
+				p.runThePlanner("domain1.pddl","problem1.pddl");
+				
+				moveSynchs  = extractMoveSynch();
+				moveSynchsCopy = new ArrayList<>();
+				
+				if(moveSynchs.size()!=0) {
+					tId++;
+					Trace t = new Trace("Trace#" + tId);
+					t.setTraceAlphabet(new Vector<String>());
+					
+					for(String move : moveSynchs) {
+						moveSynchsCopy.add(move);
+						//if(!t.getTraceAlphabet().contains(move))
+						t.getTraceAlphabet().addElement(move);
+					}
+					
+					//aggiungi la traccia in una lista traces of movesynchs
+					tracesPerPattern.get(pattern).add(t);
+				}
+				
+				if(moveSynchsCopy.size()> maxSynchMovesPerPattern.get(pattern).size()) {
+					maxSynchMovesPerPattern.put(pattern, moveSynchsCopy);
+				}
+				
+				//System.out.println(t.getTraceName()+" "+t.getTraceNumber()+" "+t.getTraceAlphabet().get(0)+" "+t.getTraceAlphabet().get(1));
+				//occhio che all'ultima run crasha perchè il trace alignment non trova niente quindi l'ultima traccia sarà vuota
+				
+				System.out.println("######################################");
+				
+				log = filterLog(log,moveSynchs);
+						
+				//getTraces(log);
+				//System.out.println("######################################");
 		
-		if(moveSynchsCopy.size()> maxSynchMovesPerPattern.get(pattern).size()) {
-			maxSynchMovesPerPattern.put(pattern, moveSynchsCopy);
-		}
-		
-		//System.out.println(t.getTraceName()+" "+t.getTraceNumber()+" "+t.getTraceAlphabet().get(0)+" "+t.getTraceAlphabet().get(1));
-		//occhio che all'ultima run crasha perchè il trace alignment non trova niente quindi l'ultima traccia sarà vuota
-		
-		System.out.println("######################################");
-		
-		log = filterLog(log,moveSynchs);
-
-		System.out.println("######################################");
-		
-		//getTraces(log);
-		//System.out.println("######################################");
-
-		indexes = new LinkedList<Integer>();
-		}while(moveSynchsCopy.size()!=0);
+				indexes = new LinkedList<Integer>();
+				iteration++;
+			}while(moveSynchsCopy.size()!=0);
 		
 		//input.close();
 		Constants.setLogActivitiesRepositoryVector(new Vector<String>());
@@ -423,7 +419,9 @@ public class Main {
 		
 		
 		}
-		//creaXLOG
+		/**
+		 * Creazione del routine based log
+		 */
 		//---------------------------------------------------------------//
 		XFactory factory = XFactoryRegistry.instance().currentDefault();
 		XLog newLog = factory.createLog();
@@ -476,7 +474,7 @@ public class Main {
 				String activityNameFormatted = Utilities.getCorrectFormatting(activityName);
 
 				if(moveSynchs.contains(activityNameFormatted) && indexes.contains(i)) {
-					System.out.println("Find "+activityName);
+					System.out.println("Synchronous move -> "+activityName);
 					moveSynchs.remove(activityNameFormatted);
 					toRemove.add(event);
 				}
@@ -495,7 +493,7 @@ public class Main {
 
 	private static void getTraces(XLog log) throws IOException{		
 
-    	System.out.println("Il log �:");
+    	System.out.println("UI log:");
 		for (XTrace trace : log) {
 			trace.forEach(activity -> {
 			    System.out.println(activity.getAttributes().get("concept:name").toString());
@@ -518,6 +516,8 @@ public class Main {
 		String alignmentFileLine;
 		Vector<String> pddlAlignmentMovesVector = new Vector<String>();
 		int i = 0;
+		
+		System.out.println("Trace Alignment:");
 		
 		while ((alignmentFileLine = alignmentFileReader.readLine()) != null) {
 			if(alignmentFileLine.startsWith(COST_ENTRY_PREFIX)) {
@@ -574,9 +574,9 @@ public class Main {
 		
 		// update total counters
 		if(indexes.size()!=0) {
-			for(int c : indexes)
-				System.out.print(c +" ");
-			System.out.println();
+			//for(int c : indexes)
+				//System.out.print(c +" ");
+			//System.out.println();
 			totalAlignmentCost += Float.parseFloat(traceAlignmentCost);
 			totalAlignmentTime += Float.parseFloat(traceAlignmentTime);
 			System.out.println("ToalAlignmentCost "+totalAlignmentCost+" totalAlignmentTime "+totalAlignmentTime);

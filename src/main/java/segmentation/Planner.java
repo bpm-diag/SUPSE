@@ -32,11 +32,11 @@ public class Planner {
 	    String[] commandArgs;
 	    String domain=PDDL_FILES_DIR+domainFile, problem=PDDL_FILES_DIR+problemFile;
 	    try{
-	          //computer domain and problem
+	          //compute domain and problem
 	          
-	          System.out.println(domain+" "+problem);
+	          //System.out.println(domain+" "+problem);
 	          commandArgs = buildFastDownardCommandArgs(domain,problem);
-	          System.out.println(java.util.Arrays.toString(commandArgs));
+	          //System.out.println(java.util.Arrays.toString(commandArgs));
 	          
 	          // execute external planner script and wait for results
 	          ProcessBuilder processBuilder = new ProcessBuilder(commandArgs);
