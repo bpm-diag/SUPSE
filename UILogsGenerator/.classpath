@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.8.0_271"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="/segmentation/lib/commons-lang3-3.6.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/guava-16.0.1.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/OpenXES-XStream.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/OpenXES.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/PetriNets.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/ProM-Framework.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/ProM-Models.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/Spex.jar"/>
+	<classpathentry kind="lib" path="/segmentation/lib/xpp3-1.1.4c.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
