@@ -1,4 +1,4 @@
-Supervised Segmentation through Trace Alignment
+# Supervised Segmentation through Trace Alignment
 
 ### 1. **Preparation**
 - Download the pre-built [Fast-Downward planner](https://drive.google.com/file/d/0B0FHkIijDk2heXd1X2FaUmktRDQ/view).
